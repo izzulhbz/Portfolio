@@ -1,0 +1,19 @@
+@layer base {
+  :root {
+    --border: hsl(240, 5%, 91%);
+    --ring: hsl(240, 5%, 80%);
+    --radius: 0.5rem;
+  }
+
+  *, ::before, ::after {
+    border-color: hsl(var(--border)) !important;
+  }
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
