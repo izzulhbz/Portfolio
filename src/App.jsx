@@ -52,7 +52,7 @@ export default function App() {
             Hi, I'm <span className="text-primary">Izzul</span> 👋
           </h2>
           <p className="text-lg md:text-xl mb-8 max-w-prose">
-            A software engineer who loves building delightful web experiences.
+            A software engineer who loves building delightful experiences.
           </p>
           <Button asChild size="lg" className="text-white">
             <a href="#projects">Check out my work</a>
@@ -72,7 +72,7 @@ export default function App() {
       <section id="about" className="max-w-4xl mx-auto px-6 py-20">
         <h3 className="text-3xl font-bold mb-6 text-center">About Me</h3>
         <p className="text-lg leading-relaxed text-center">
-          I'm a second‑year Software Engineering student at Singapore Institute of Technology with a passion for
+          I'm a third-year Software Engineering student at Singapore Institute of Technology with a passion for
           full‑stack development. When I'm not coding, you’ll find me sleeping or working on myself.
         </p>
       </section>
@@ -145,7 +145,7 @@ export default function App() {
 
       {/* FOOTER */}
       <footer className="py-6 text-center text-sm text-gray-500">
-        © {new Date().getFullYear()} izzulhbz — Built with ♥ and 💧.
+        © {new Date().getFullYear()} izzulhbz
       </footer>
     </div>
   );
