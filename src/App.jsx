@@ -1,7 +1,7 @@
 import { motion, MotionConfig, useScroll } from 'framer-motion';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Mail, Github, Linkedin, Instagram } from "lucide-react";
 import Hero from "@/components/Hero";
 import './index.css';
 
@@ -36,10 +36,10 @@ const facts = [
 ];
 
 const links = [
-  { label: "Email", handle: "izzulhbz@gmail.com", href: "mailto:izzulhbz@gmail.com" },
-  { label: "GitHub", handle: "izzulhbz", href: "https://github.com/izzulhbz" },
-  { label: "LinkedIn", handle: "izzulhbz", href: "https://linkedin.com/in/izzulhbz" },
-  { label: "Instagram", handle: "izzulhbz", href: "https://instagram.com/izzulhbz" },
+  { label: "Email", icon: Mail, handle: "izzulhbz@gmail.com", href: "mailto:izzulhbz@gmail.com" },
+  { label: "GitHub", icon: Github, handle: "izzulhbz", href: "https://github.com/izzulhbz" },
+  { label: "LinkedIn", icon: Linkedin, handle: "izzulhbz", href: "https://linkedin.com/in/izzulhbz" },
+  { label: "Instagram", icon: Instagram, handle: "izzulhbz", href: "https://instagram.com/izzulhbz" },
 ];
 
 const navLinkClass =
@@ -191,7 +191,12 @@ export default function App() {
                     {...(link.href.startsWith("http") ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                     className="group flex items-center justify-between gap-6 border-t border-ink/10 py-5 transition-[color,padding] duration-300 hover:px-3 hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                   >
-                    <span className="text-xl md:text-2xl font-medium tracking-[-0.02em]">{link.label}</span>
+                    <span className="flex items-center gap-4 text-xl md:text-2xl font-medium tracking-[-0.02em]">
+                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-ink/15 text-ink/70 transition-colors duration-300 group-hover:border-primary group-hover:bg-primary group-hover:text-paper">
+                        <link.icon className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden />
+                      </span>
+                      {link.label}
+                    </span>
                     <span className="flex items-center gap-3 font-mono text-xs text-ink/50 transition-colors group-hover:text-primary">
                       <span className="hidden sm:inline">{link.handle}</span>
                       <ArrowUpRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
