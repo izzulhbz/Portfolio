@@ -8,11 +8,26 @@ const EASE = [0.22, 1, 0.36, 1];
 const SHOW_WORK_CTA = false;
 
 /**
- * A soft brush stroke that follows the cursor and dries out behind it.
- * Points are kept for TRAIL_LIFE ms and the whole stroke is redrawn each frame,
- * so nothing is left behind on the canvas.
+ * Ink that bleeds into the paper behind the cursor.
+ * Each droplet lands small and dark, then spreads outward and pales as it
+ * soaks in, with a slightly darker rim like ink drying on paper.
+ * The canvas is redrawn every frame, so nothing builds up.
  */
-const TRAIL_LIFE = 1100;
+const INK_LIFE = 1800;
+const INK_SPACING = 7;
+const INK_MAX_DROPS = 260;
+
+function makeDrop(x, y, size) {
+  // A few overlapping lobes make the edge irregular instead of a perfect circle.
+  const lobes = [{ dx: 0, dy: 0, r: 1 }];
+  const extra = 1 + Math.floor(Math.random() * 3);
+  for (let i = 0; i < extra; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const d = 0.25 + Math.random() * 0.45;
+    lobes.push({ dx: Math.cos(a) * d, dy: Math.sin(a) * d, r: 0.45 + Math.random() * 0.4 });
+  }
+  return { x, y, t: performance.now(), size, spread: 1.4 + Math.random() * 1.2, lobes };
+}
 
 function PaintTrail({ hostRef }) {
   const canvasRef = useRef(null);
@@ -21,7 +36,8 @@ function PaintTrail({ hostRef }) {
     const host = hostRef.current;
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
-    let points = [];
+    let drops = [];
+    let last = null;
     let raf = 0;
     let width = 0;
     let height = 0;
@@ -38,25 +54,31 @@ function PaintTrail({ hostRef }) {
 
     const draw = () => {
       const now = performance.now();
-      points = points.filter((p) => now - p.t < TRAIL_LIFE);
+      drops = drops.filter((d) => now - d.t < INK_LIFE);
       ctx.clearRect(0, 0, width, height);
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.strokeStyle = '#1734C2';
 
-      for (let i = 1; i < points.length; i++) {
-        const a = points[i - 1];
-        const b = points[i];
-        if (b.start) continue;
-        const life = 1 - (now - b.t) / TRAIL_LIFE;
-        ctx.lineWidth = Math.max(0.5, b.w * Math.pow(life, 0.8));
-        ctx.beginPath();
-        ctx.moveTo(a.x, a.y);
-        ctx.lineTo(b.x, b.y);
-        ctx.stroke();
+      for (const d of drops) {
+        const age = (now - d.t) / INK_LIFE;
+        const grow = 1 - Math.pow(1 - age, 3); // fast bleed, then it slows
+        const radius = d.size * (1 + d.spread * grow);
+        const alpha = 0.5 * Math.pow(1 - age, 1.6);
+
+        for (const lobe of d.lobes) {
+          const cx = d.x + lobe.dx * radius;
+          const cy = d.y + lobe.dy * radius;
+          const r = radius * lobe.r;
+          const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+          g.addColorStop(0, `rgba(16, 36, 140, ${alpha * 0.75})`);
+          g.addColorStop(0.72, `rgba(16, 36, 140, ${alpha})`);
+          g.addColorStop(1, 'rgba(16, 36, 140, 0)');
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.arc(cx, cy, r, 0, Math.PI * 2);
+          ctx.fill();
+        }
       }
 
-      raf = points.length ? requestAnimationFrame(draw) : 0;
+      raf = drops.length ? requestAnimationFrame(draw) : 0;
     };
 
     const onMove = (e) => {
@@ -65,16 +87,28 @@ function PaintTrail({ hostRef }) {
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
       const t = performance.now();
-      const last = points[points.length - 1];
-      const start = !last || t - last.t > 160;
-      // A brush lays down less paint the faster it moves.
-      let w = 26;
-      if (!start) {
-        const speed = Math.hypot(x - last.x, y - last.y);
-        const target = Math.min(30, Math.max(9, 30 - speed * 0.45));
-        w = last.w * 0.8 + target * 0.2;
+
+      if (!last || t - last.t > 200) {
+        // Pen touches down: a slightly bigger blot.
+        drops.push(makeDrop(x, y, 7));
+      } else {
+        const dist = Math.hypot(x - last.x, y - last.y);
+        // Slow strokes let more ink soak out of the nib.
+        const size = Math.max(2.5, 6.5 - dist * 0.08);
+        const steps = Math.floor(dist / INK_SPACING);
+        for (let i = 1; i <= steps; i++) {
+          const k = i / steps;
+          drops.push(makeDrop(last.x + (x - last.x) * k, last.y + (y - last.y) * k, size));
+        }
+        if (steps === 0) {
+          // Not moved far enough for a new drop, so keep the old anchor.
+          last.t = t;
+          if (!raf) raf = requestAnimationFrame(draw);
+          return;
+        }
       }
-      points.push({ x, y, t, w, start });
+      if (drops.length > INK_MAX_DROPS) drops = drops.slice(-INK_MAX_DROPS);
+      last = { x, y, t };
       if (!raf) raf = requestAnimationFrame(draw);
     };
 
@@ -93,7 +127,7 @@ function PaintTrail({ hostRef }) {
     <canvas
       ref={canvasRef}
       aria-hidden
-      className="pointer-events-none absolute inset-0 -z-10 h-full w-full opacity-[0.14] mix-blend-multiply blur-[3px]"
+      className="pointer-events-none absolute inset-0 -z-10 h-full w-full opacity-40 mix-blend-multiply blur-[1.5px]"
     />
   );
 }
