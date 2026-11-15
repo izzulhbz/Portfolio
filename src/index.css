@@ -6,7 +6,7 @@
   }
 
   *, ::before, ::after {
-    border-color: hsl(var(--border)) !important;
+    border-color: var(--border);
   }
 }
 
@@ -16,4 +16,15 @@
 
 html {
   scroll-behavior: smooth;
+}
+
+::selection {
+  background: #1734C2;
+  color: #FAFAF7;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }
